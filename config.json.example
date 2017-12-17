@@ -1,0 +1,6 @@
+{
+  "_identifier": "<<lname>>_<<fname>>",
+  "<<fname>>": "First name",
+  "<<lname>>": "Last name",
+  "<<dob>>": "Date of birth"
+}
