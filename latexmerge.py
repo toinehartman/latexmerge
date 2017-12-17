@@ -106,11 +106,12 @@ if __name__ == "__main__":
 
     TMP_DIR = os.path.join("temp")
     TEMPLATE_STR = open(args.template, 'r').read()
+    LOGFILENAME = ".".join([args.data, "log"])
 
     ensure_dirs(TMP_DIR, args.output)
     print("\n{}Brieven maken van template:{}\n{}\n".format(color.BOLD, color.END, TEMPLATE_STR))
 
-    with open(args.data, 'r') as datafile:
+    with open(args.data, 'r') as datafile, open(LOGFILENAME, 'w') as logfile:
         reader = csv.reader(datafile)
         header = next(reader)
         for data in tqdm(reader):
@@ -130,9 +131,9 @@ if __name__ == "__main__":
                 tex.write(letter)
 
             # compile pdf
-            subprocess.call(["pdflatex", filename_tex], cwd=TMP_DIR, stdout=subprocess.DEVNULL)
+            subprocess.call(["pdflatex", filename_tex], cwd=TMP_DIR, stdout=subprocess.DEVNULL, stderr=logfile)
 
             # copy pdf to output dir
-            subprocess.call(["cp", filename_tmp, filename_out], stdout=subprocess.DEVNULL)
+            subprocess.call(["cp", filename_tmp, filename_out], stdout=subprocess.DEVNULL, stderr=logfile)
 
     remove_dirs(TMP_DIR)

@@ -10,3 +10,6 @@
 # output directories
 output/
 temp/
+
+# log giles
+*.log
