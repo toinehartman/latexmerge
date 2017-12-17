@@ -1,0 +1,12 @@
+# config files
+*.json
+
+# data files
+*.csv
+
+# template files
+*.tex
+
+# output directories
+output/
+temp/
