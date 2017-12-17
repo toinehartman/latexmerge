@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import json
+import csv
 
 from tqdm import *
 
@@ -53,14 +54,6 @@ def args():
     parser.add_argument("--skip", dest="skip_empty", action="store_true", help="skip empty lines in the data file")
 
     return parser.parse_args()
-
-def head(path):
-    with open(path, 'r') as f:
-        return f.readlines()[0]
-
-def tail(path):
-    with open(path, 'r') as f:
-        return f.readlines()[1:]
 
 def replace(format_str, d):
     result_str = format_str
@@ -115,32 +108,31 @@ if __name__ == "__main__":
     TEMPLATE_STR = open(args.template, 'r').read()
 
     ensure_dirs(TMP_DIR, args.output)
-
-    header = head(args.data).split(',')
-
     print("\n{}Brieven maken van template:{}\n{}\n".format(color.BOLD, color.END, TEMPLATE_STR))
 
-    for line in tqdm(tail(args.data)):
-        data = line.split(',')
-        if args.skip_empty and re.match(r"^([\s,])+$", line):
-            continue
+    with open(args.data, 'r') as datafile:
+        reader = csv.reader(datafile)
+        header = next(reader)
+        for data in tqdm(reader):
+            # if args.skip_empty and re.match(r"^([\s,])+$", line):
+            #     continue
 
-        letter = replace(TEMPLATE_STR, header, config, data)
-        identifier = replace(config["_identifier"], header, config, data, escape=False).replace('\n', '').replace('"', '\"').replace("'", "\'")
-        # identifier = "_".join([data[k] for k in IDENTIFIERS])
+            letter = replace(TEMPLATE_STR, header, config, data)
+            identifier = replace(config["_identifier"], header, config, data, escape=False).replace('\n', '').replace('"', '\"').replace("'", "\'")
+            # identifier = "_".join([data[k] for k in IDENTIFIERS])
 
-        filename_tex = os.path.abspath(os.path.join(TMP_DIR, ".".join([identifier, "tex"])))
-        filename_tmp = os.path.abspath(os.path.join(TMP_DIR, ".".join([identifier, "pdf"])))
-        filename_out = os.path.abspath(os.path.join(args.output, ".".join([identifier, "pdf"])))
+            filename_tex = os.path.abspath(os.path.join(TMP_DIR, ".".join([identifier, "tex"])))
+            filename_tmp = os.path.abspath(os.path.join(TMP_DIR, ".".join([identifier, "pdf"])))
+            filename_out = os.path.abspath(os.path.join(args.output, ".".join([identifier, "pdf"])))
 
-        # write tex
-        with open(filename_tex, 'w') as tex:
-            tex.write(letter)
+            # write tex
+            with open(filename_tex, 'w') as tex:
+                tex.write(letter)
 
-        # compile pdf
-        subprocess.call(["pdflatex", filename_tex], cwd=TMP_DIR, stdout=subprocess.DEVNULL)
+            # compile pdf
+            subprocess.call(["pdflatex", filename_tex], cwd=TMP_DIR, stdout=subprocess.DEVNULL)
 
-        # copy pdf to output dir
-        subprocess.call(["cp", filename_tmp, filename_out], stdout=subprocess.DEVNULL)
+            # copy pdf to output dir
+            subprocess.call(["cp", filename_tmp, filename_out], stdout=subprocess.DEVNULL)
 
     remove_dirs(TMP_DIR)
